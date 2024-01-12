@@ -6,15 +6,18 @@ authors = ["It Soda <nikshchegilskiy@gmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.9"
+python = "^3.10"
 django = "4.2"
-pillow = "^10.1.0"
 django-extensions = "3.2.3"
+redis = "4.6.0"
 pytelegrambotapi = "4.13.0"
 mysqlclient = "2.1.1"
 gunicorn = "^21.2.0"
+django-cors-headers = "^4.3.1"
+djangochannelsrestframework = "^1.2.0"
 python-decouple = "^3.8"
 telebot = "^0.0.5"
+
 
 
 [tool.poetry.group.dev.dependencies]
