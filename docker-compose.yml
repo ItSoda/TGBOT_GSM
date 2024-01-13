@@ -40,18 +40,34 @@ services:
     build: 
       dockerfile: ./Dockerfile
       context: ./docker/nginx/
-    container_name: nginx_tgbot_avito
-    image: nginx_tgbot_avito
+    container_name: nginx_tgbot_gsm
+    image: nginx_tgbot_gsm
     volumes:
       - static_volume:/itsoda/static
       - media_volume:/itsoda/media
+      - certs:/etc/nginx/certs
+      - vhost:/etc/nginx/vhost.d
+      - html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
     depends_on:
       - api
     ports:
       - "80:80"
-
+      - "443:443"
+  acme_companion:
+    image: nginxproxy/acme-companion:2.2
+    container_name: onlydev_acme_companion
+    volumes_from:
+      - nginx
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - acme:/etc/acme.sh
 
 volumes:
   mysql_data: null
   static_volume:
   media_volume:
+  certs:
+  vhost:
+  html:
+  acme:
