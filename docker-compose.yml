@@ -26,6 +26,8 @@ services:
       - docker-compose.env
     environment:
       - DOCKER_CONTAINER=True
+      - VIRTUAL_HOST=37.228.117.146
+      - LETSENCRYPT_HOST=37.228.117.146
     ports:
       - "8000:8000" 
     depends_on:

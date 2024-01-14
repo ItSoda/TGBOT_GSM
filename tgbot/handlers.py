@@ -1,14 +1,9 @@
 import logging
-import urllib.request
-from io import BytesIO
-
-import requests
 import telebot
 from django.conf import settings
-from django.core.files import File
 from telebot import types
 
-from .models import Admin, Brand, Category, Product
+from .models import Admin, Brand, Category, Product, UserBot, News
 
 logger = logging.getLogger("main")
 
@@ -20,12 +15,31 @@ bot = telebot.TeleBot(settings.TELEGRAM_BOT_TOKEN)
 # Обработчик команды /start
 @bot.message_handler(commands=["start"])
 def handle_start(message):
+    user_id = message.chat.id
+    username = message.from_user.username
+    first_name = message.from_user.first_name
+    last_name = message.from_user.last_name
     markup = types.ForceReply(selective=False)
-    bot.send_message(
-        message.chat.id,
-        f"Привет! Это компания МАСТЕР GSM ИСТРА. \n\nВоспользуйся /help для подробной информации",
-        reply_markup=markup,
-    )
+    try:
+        if UserBot.objects.get(user_id=user_id):
+            bot.send_message(
+                message.chat.id,
+                f"Привет, {first_name}! \nЭто компания МАСТЕР GSM ИСТРА. \n\nВоспользуйся /help для подробной информации или /catalog чтобы посмотреть наши товары.",
+                reply_markup=markup,
+            )
+
+    except UserBot.DoesNotExist:
+        UserBot.objects.create(
+            user_id=user_id,
+            username=username,
+            first_name=first_name,
+            last_name=last_name,
+        )
+        bot.send_message(
+            message.chat.id,
+            f"Привет, {first_name}! Это компания МАСТЕР GSM ИСТРА. \n\nВоспользуйся /help для подробной информации или /catalog чтобы посмотреть наши товары.",
+            reply_markup=markup,
+        )
 
 
 @bot.message_handler(commands=["help"])
@@ -47,7 +61,8 @@ def product_catalog(message):
     keyboard = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
 
     for category in categories:
-        button = types.KeyboardButton(text=category.name)
+        products = Product.objects.filter(category=category)
+        button = types.KeyboardButton(text=f"{category.name} ({products.count()})")
         keyboard.add(button)
 
     bot.send_message(
@@ -64,7 +79,7 @@ def product_catalog(message):
 
 
 def proccess_product_category(message):
-    category_name = message.text
+    category_name = message.text.split("(", 1)[0].strip()
     try:
         category = Category.objects.get(name=category_name)
         brands = Brand.objects.filter(category=category)
@@ -83,7 +98,7 @@ def proccess_product_category(message):
     except Category.DoesNotExist:
         bot.send_message(
             message.chat.id,
-            "Выберите категорию из предложенных или нажмите назад еще раз.",
+            "Введите еще раз /catalog и выберите категорию из предложенных! Если вы хотите выйти из выбора категории, то отправьте вашу команду еще раз.",
         )
 
 
@@ -139,6 +154,57 @@ def help(message):
 
 # ##################################################### ADMIN PART #######################################################################
 
+# Рассылка всем пользователям от лица админа
+@bot.message_handler(commands=["send_message"])
+def send_message(message):
+    user = Admin.objects.filter(UUID=int(message.chat.id)).first()
+    if user:
+        markup = types.ForceReply(selective=False)
+        bot.send_message(
+            message.chat.id,
+            "Введите текст сообщения, которое хотите отправить:",
+            reply_markup=markup,
+        )
+        bot.register_next_step_handler(message, process_text)
+    else:
+        bot.send_message(message.chat.id, "Вы не администратор")
+
+
+def process_text(message):
+    text = message.text.strip()
+    markup = types.ForceReply(selective=False)
+    bot.send_message(
+        message.chat.id,
+        "Теперь отправьте фотографию для этого сообщения: \nЕсли не хотите то '-'",
+        reply_markup=markup,
+    )
+    bot.register_next_step_handler(message, process_photo, text)
+
+
+def process_photo(message, text):
+    if message.photo:
+        photo = message.photo[-1].file_id  # Получаем file_id фотографии
+        users = UserBot.objects.all()
+
+        for user in users:
+            try:
+                bot.send_photo(user.user_id, photo, caption=text)
+                News.objects.create(text=text, photo=photo)
+            except Exception as e:
+                print(f"Произошла ошибка {e}")
+        else:
+            bot.send_message(message.chat.id, "Рассылка завершена")
+    else:
+        users = UserBot.objects.all()
+
+        for user in users:
+            try:
+                bot.send_message(user.user_id, text)
+                News.objects.create(
+                    text=text,
+                )
+            except Exception as e:
+                print(f"Произошла ошибка {e}")
 
 # Добавление администратора
 @bot.message_handler(commands=["admin_add"])
@@ -151,12 +217,12 @@ def send_message(message):
             "Введите ID аккаунта, нового администратора",
             reply_markup=markup,
         )
-        bot.register_next_step_handler(message, process_text)
+        bot.register_next_step_handler(message, process_text_admin)
     else:
         bot.send_message(message.chat.id, "Вы не администратор")
 
 
-def process_text(message):
+def process_text_admin(message):
     id_admin = message.text.strip()
     markup = types.ForceReply(selective=False)
     try:
@@ -307,9 +373,9 @@ def proccess_brand(message):
 
 def proccess_price_brand(message, category):
     brand_name = message.text
+    markup = types.ForceReply(selective=False)
     try:
         if brand_name == "-":
-            markup = types.ForceReply(selective=False)
             bot.send_message(message.chat.id, "Отправьте процент:", reply_markup=markup)
             bot.register_next_step_handler(
                 message, proccess_procent_only_category, category
@@ -355,6 +421,99 @@ def proccess_procent_brand(message, products):
 @bot.message_handler(func=lambda message: message.text == "Шаг назад")
 def go_back(message):
     priceUp(message)
+
+# Понижение процент товара
+@bot.message_handler(commands=["price_down"])
+def priceDown(message):
+    categories = Category.objects.all()
+
+    keyboard = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+
+    for category in categories:
+        button = types.KeyboardButton(text=category.name)
+        keyboard.add(button)
+
+    bot.send_message(
+        message.chat.id, "Выберите одну из категорий товаров!", reply_markup=keyboard
+    )
+    bot.register_next_step_handler(message, proccess_brand_down)
+
+
+def proccess_brand_down(message):
+    category_name = message.text
+    try:
+        category = Category.objects.get(name=category_name)
+        brands = Brand.objects.filter(category=category)
+
+        keyboard = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+
+        for brand in brands:
+            button = types.KeyboardButton(text=brand.name)
+            keyboard.add(button)
+
+        back_button = types.KeyboardButton(text="Отмена")
+        keyboard.add(back_button)
+
+        bot.send_message(
+            message.chat.id,
+            "Выберите вендора! Если хотите опустить цены на всю категорию то пришлите '-'",
+            reply_markup=keyboard,
+        )
+        bot.register_next_step_handler(message, proccess_price_brand_down, category)
+    except Exception:
+        bot.send_message(message.chat.id, "Ошибка выбора вендора!")
+
+
+def proccess_price_brand_down(message, category):
+    brand_name = message.text
+    markup = types.ForceReply(selective=False)
+    try:
+        if brand_name == "-":
+            bot.send_message(message.chat.id, "Отправьте процент:", reply_markup=markup)
+            bot.register_next_step_handler(
+                message, proccess_procent_only_category_down, category
+            )
+        else:
+            brand = Brand.objects.get(category=category, name=brand_name)
+            products = Product.objects.filter(category=category, brand=brand)
+            bot.send_message(message.chat.id, "Отправьте процент:", reply_markup=markup)
+            bot.register_next_step_handler(message, proccess_procent_brand_down, products)
+    except Exception:
+        bot.send_message(
+            message.chat.id, "Нет продуктов для выбранной категории и вендора."
+        )
+
+
+def proccess_procent_only_category_down(message, category):
+    procent = message.text
+    try:
+        markup = types.ForceReply(selective=False)
+        products = Product.objects.filter(category=category)
+        for product in products:
+            product.price -= int(product.price) * int(procent) // 100
+            product.save()
+
+        bot.send_message(message.chat.id, text="Список обновлен!", reply_markup=markup)
+    except Exception as e:
+        bot.send_message(message.chat.id, f"Ошибка! Неправильный формат процента.")
+
+
+def proccess_procent_brand_down(message, products):
+    procent = message.text
+    try:
+        markup = types.ForceReply(selective=False)
+        for product in products:
+            product.price -= int(product.price) * int(procent) // 100
+            product.save()
+
+        bot.send_message(message.chat.id, text="Список обновлен!", reply_markup=markup)
+    except Exception as e:
+        bot.send_message(message.chat.id, f"Ошибка! Неправильный формат процента.")
+
+
+@bot.message_handler(func=lambda message: message.text == "Отмена")
+def go_back(message):
+    priceDown(message)
 
 
 # Добавление товара
@@ -479,7 +638,7 @@ def info(message):
         if admin_id:
             bot.reply_to(
                 message,
-                f"Вы администратор! Вам доступны особенные команды. \n\n/admin_add - Добавление админа\n\n/product_add - Добавление товара \n\n/price_up_with_price - Повышение цены по определенной цене \n\n/price_up - Повышение цены по определенной категории и бренду \n\n/price_up_all - Повышение цены для всех товаров",
+                f"Вы администратор! Вам доступны особенные команды. \n\n/admin_add - Добавление админа\n\n/product_add - Добавление товара \n\n/price_up_with_price - Повышение цены по определенной цене \n\n/price_up - Повышение цены по определенной категории и бренду \n\n/price_up_all - Повышение цены для всех товаров \n\n/price_down - Понижение цены по определенной категории или вендору \n\n/send_message - Рассылка сообщения всем юзерам",
             )
     bot.reply_to(message, f"Лучше закажите у нас!")
 
