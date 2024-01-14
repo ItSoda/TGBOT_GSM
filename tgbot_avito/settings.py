@@ -162,3 +162,10 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # TELEGRAM BOT
 TELEGRAM_BOT_TOKEN = config.get("TELEGRAM_BOT_TOKEN")
+
+# CSRF
+CSRF_TRUSTED_ORIGINS = [
+    "https://boar-still-alpaca.ngrok-free.app",
+    "http://red-store.site",
+    "https://red-store.site",
+]
