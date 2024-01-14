@@ -39,7 +39,7 @@ from django.db import models
 class UserBot(models.Model):
     """БД для хранения данных о пользователях"""
 
-    user_id = models.IntegerField(verbose_name="USER ID", unique=True)
+    user_id = models.BigIntegerField(verbose_name="USER ID", unique=True)
 
     username = models.CharField(max_length=256, null=True, blank=True)
 
