@@ -142,7 +142,7 @@ def help(message):
 @bot.message_handler(commands=["contacts"])
 def help(message):
     markup = types.ForceReply(selective=False)
-    photo_path = "./media/photo_tg_bot.jpg"
+    photo_path = "./media/tgbot_photo2.jpg"
     bot.send_photo(message.chat.id, open(photo_path, "rb"))
     bot.send_message(
         message.chat.id,
