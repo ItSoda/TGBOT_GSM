@@ -38,16 +38,19 @@ services:
       - media_volume:/itsoda/media
     container_name: tgbot_avito
   
-  telegram_bot:
+  startbot:
+    image: itsoda14/tgbot_avito:latest
+    command: sh -c "poetry run python manage.py startbot"
     restart: always
-    command: 
-      - sh
-      - -c
-      - |
-        dockerize -wait tcp://mysql:3306 -timeout 300s &&
-        poetry run python manage.py startbot
-    depends_on:
+    depends_on:    
       - api
+    volumes:
+      - .:/itsoda
+    env_file:
+      - docker-compose.env
+    environment:
+      - DOCKER_CONTAINER=True
+    container_name: tgbot_startbot
 
   nginx:
     build: 
