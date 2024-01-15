@@ -37,6 +37,17 @@ services:
       - static_volume:/itsoda/static
       - media_volume:/itsoda/media
     container_name: tgbot_avito
+  
+  telegram_bot:
+    restart: always
+    command: 
+      - sh
+      - -c
+      - |
+        dockerize -wait tcp://mysql:3306 -timeout 300s &&
+        poetry run python manage.py startbot
+    depends_on:
+      - api
 
   nginx:
     build: 
