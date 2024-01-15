@@ -381,13 +381,13 @@ def proccess_price_brand(message, category):
                 message, proccess_procent_only_category, category
             )
         else:
-            brand = Brand.objects.get(category=category, name=brand_name)
+            brand = Brand.objects.filter(category=category, name=brand_name).first()
             products = Product.objects.filter(category=category, brand=brand)
             bot.send_message(message.chat.id, "Отправьте процент:", reply_markup=markup)
             bot.register_next_step_handler(message, proccess_procent_brand, products)
-    except Exception:
+    except Exception as e:
         bot.send_message(
-            message.chat.id, "Нет продуктов для выбранной категории и вендора."
+            message.chat.id, f"Нет продуктов для выбранной категории и вендора. {str(e)}"
         )
 
 
@@ -514,6 +514,69 @@ def proccess_procent_brand_down(message, products):
 @bot.message_handler(func=lambda message: message.text == "Отмена")
 def go_back(message):
     priceDown(message)
+
+
+# Понижение цен товаров с определенной стоимостью
+@bot.message_handler(commands=["price_down_with_price"])
+def priceDownWithPrice(message):
+    bot.send_message(message.chat.id, "Напишите минимальную сумму! Пример: 1000")
+    bot.register_next_step_handler(message, proccess_priceDown_with_price)
+
+
+def proccess_priceDown_with_price(message):
+    min_price = message.text
+    if min_price == "Вернуться к прошлому шагу":
+        return priceDownWithPrice(message)
+    try:
+        keyboard = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+        back_button = types.KeyboardButton(text="Вернуться к прошлому шагу")
+        keyboard.add(back_button)
+
+        bot.send_message(
+            message.chat.id,
+            "Напишите максимальную сумму! Пример: 10000",
+            reply_markup=keyboard,
+        )
+        bot.register_next_step_handler(
+            message, proccess_priceDown_with_price_2, min_price
+        )
+    except Exception:
+        bot.send_message(message.chat.id, "Ошибка минимальной суммы!")
+
+
+def proccess_priceDown_with_price_2(message, min_price):
+    max_price = message.text
+    if max_price == "Вернуться к прошлому шагу":
+        return proccess_priceDown_with_price(message)
+    try:
+        keyboard = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+        back_button = types.KeyboardButton(text="Вернуться к прошлому шагу")
+        keyboard.add(back_button)
+
+        bot.send_message(
+            message.chat.id, "Теперь напишите процент!", reply_markup=keyboard
+        )
+        bot.register_next_step_handler(
+            message, proccess_priceDown_with_price_2_price_up, min_price, max_price
+        )
+    except Exception:
+        bot.send_message(message.chat.id, "Ошибка максимальной суммы!")
+
+
+def proccess_priceDown_with_price_2_price_up(message, min_price, max_price):
+    procent = message.text
+    if procent == "Вернуться к прошлому шагу":
+        return proccess_priceDown_with_price_2(message)
+    try:
+        markup = types.ForceReply(selective=False)
+        products = Product.objects.filter(price__gte=min_price, price__lte=max_price)
+        for product in products:
+            product.price -= int(int(product.price) * float(procent) // 100)
+            product.save()
+
+        bot.send_message(message.chat.id, text="Список обновлен!", reply_markup=markup)
+    except Exception as e:
+        bot.send_message(message.chat.id, f"Ошибка! Неправильный формат.")
 
 
 # Добавление товара
