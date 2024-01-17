@@ -87,7 +87,8 @@ def proccess_product_category(message):
         keyboard = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
 
         for brand in brands:
-            button = types.KeyboardButton(text=brand.name)
+            products = Product.objects.filter(category=category, brand=brand)
+            button = types.KeyboardButton(text=f"{brand.name} ({products.count()})")
             keyboard.add(button)
 
         back_button = types.KeyboardButton(text="Назад")
