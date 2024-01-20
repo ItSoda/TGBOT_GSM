@@ -104,7 +104,7 @@ def proccess_product_category(message):
 
 
 def proccess_product_brand(message, category):
-    brand_name = message.text
+    brand_name = message.text.split("(", 1)[0].strip()
     try:
         brands = Brand.objects.filter(category=category, name=brand_name)
         brand = brands.first()
