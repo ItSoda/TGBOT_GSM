@@ -4,6 +4,7 @@ from django.conf import settings
 from telebot import types
 
 from .models import Admin, Brand, Category, Product, UserBot, News
+import re
 
 logger = logging.getLogger("main")
 
@@ -153,7 +154,83 @@ def help(message):
     )
 
 
+@bot.message_handler(commands=["alllist"])
+def alllist(message):
+    text = ""
+    brands = Brand.objects.all()
+    for brand in brands:
+        text += f"------------------------------\n{brand.name}\n------------------------------\n"
+        categories = brand.category.all()
+        for category in categories:
+            text += f"{category.name}\n"
+            products = Product.objects.filter(brand=brand, category=category)
+            for product in products:
+                text += f"{product.name} - {product.price} {product.currency}\n"
+
+    bot.send_message(message.chat.id, text)
+
+
 # ##################################################### ADMIN PART #######################################################################
+@bot.message_handler(commands=["updateList"])
+def updateList(message):
+    markup = types.ForceReply(selective=False)
+    bot.send_message(
+        message.chat.id,
+        "Отправьте файл",
+        reply_markup=markup,
+    )
+    bot.register_next_step_handler(message, update_text_message)
+
+
+def update_text_message(message):
+    line_pattern = re.compile(r'^[-]+$')
+    brand_pattern = re.compile(r'^([A-Z\s]+)$')
+    category_pattern = re.compile(r'^([A-ZА-Я\s]+)$')
+    product_pattern = re.compile(r'^([^\n]+)\s-\s(\d+)$')
+
+    file_id = message.document.file_id
+    file_info = bot.get_file(file_id)
+    file_path = file_info.file_path
+
+    file_content = bot.download_file(file_path).decode("latin-1")
+
+
+    brand_name = None
+    current_category = None
+
+    for line in file_content.splitlines():
+        line_match = line_pattern.match(line)
+        brand_match = brand_pattern.match(line)
+        category_match = category_pattern.match(line)
+        product_match = product_pattern.match(line)
+
+        if line_match:
+            if brand_name:
+                current_brand = Brand.objects.get_or_create(name=brand_name)[0]
+            brand_name = None
+            current_category = None
+
+        elif brand_match:
+            brand_name = brand_match.group(1).strip()
+
+        elif category_match:
+            category_name = category_match.group(1).strip()
+            current_category = Category.objects.get_or_create(name=category_name)[0]
+            if current_brand:
+                current_brand.category.add(current_category)
+
+        elif product_match:
+            product_name = product_match.group(1).strip()
+            product_price = int(product_match.group(2))
+            Product.objects.create(
+                name=product_name,
+                price=product_price,
+                brand=current_brand,
+                category=current_category
+            )
+    bot.send_message(message.chat.id, "Напишите минимальную сумму! Пример: 4000")
+    bot.register_next_step_handler(message, proccess_priceUp_with_price)
+
 
 # Рассылка всем пользователям от лица админа
 @bot.message_handler(commands=["send_message"])
@@ -267,7 +344,6 @@ def proccess_price_up_all(message):
 
 
 # Повышение цен товаров с определенной стоимостью
-@bot.message_handler(commands=["price_up_with_price"])
 def priceUpWithPrice(message):
     bot.send_message(message.chat.id, "Напишите минимальную сумму! Пример: 4000")
     bot.register_next_step_handler(message, proccess_priceUp_with_price)

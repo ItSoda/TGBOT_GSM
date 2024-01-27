@@ -17,6 +17,7 @@ djangochannelsrestframework = "^1.2.0"
 python-decouple = "^3.8"
 telebot = "^0.0.5"
 pillow = "^10.1.0"
+django-telegrambot = "^1.0.1"
 
 
 

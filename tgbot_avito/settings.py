@@ -109,6 +109,9 @@ DATABASES = {
         "PASSWORD": config.get("MYSQL_ROOT_PASSWORD", default="nik140406"),
         "HOST": config.get("MYSQL_HOST", default="localhost"),
         "PORT": config.get("MYSQL_PORT", default="3306"),
+        "OPTIONS": {
+            "charset": "utf8mb4"
+        },
     }
 }
 

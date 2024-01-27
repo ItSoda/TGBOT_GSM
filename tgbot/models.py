@@ -10,14 +10,14 @@ class Category(models.Model):
 
 class Brand(models.Model):
     name = models.CharField(max_length=150)
-    category = models.ManyToManyField(Category, related_name="brands")
+    category = models.ManyToManyField(Category, related_name="brands", default="Category")
 
     def __str__(self) -> str:
         return f"{self.name}"
 
 
 class Product(models.Model):
-    name = models.TextField()
+    name = models.CharField(max_length=400)
     price = models.BigIntegerField(default=0)
     currency = models.CharField(max_length=100, default="₽")
     category = models.ForeignKey(Category, on_delete=models.CASCADE)
