@@ -167,7 +167,12 @@ def alllist(message):
             for product in products:
                 text += f"{product.name} - {product.price} {product.currency}\n"
 
-    bot.send_message(message.chat.id, text)
+    max_message_length = 4096
+
+    text_chunks = [text[i:i + max_message_length] for i in range(0, len(text), max_message_length)]
+    
+    for chunk in text_chunks:
+        bot.send_message(message.chat.id, chunk)
 
 
 # ##################################################### ADMIN PART #######################################################################
