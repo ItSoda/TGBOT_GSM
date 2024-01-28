@@ -159,7 +159,7 @@ def alllist(message):
     text = ""
     brands = Brand.objects.all()
     for brand in brands:
-        text += f"------------------------------\n{brand.name}\n------------------------------\n"
+        text += f"\n------------------------------\n{brand.name}\n------------------------------\n"
         categories = brand.category.all()
         for category in categories:
             text += f"{category.name}\n"
@@ -200,7 +200,7 @@ def updateList(message):
 
 def update_text_message(message):
     line_pattern = re.compile(r'^[-]+$')
-    brand_pattern = re.compile(r'^([A-Z\s]+)$')
+    brand_pattern = re.compile(r'^([A-Z\s\U0001F300-\U0001F5FF]+)$')
     category_pattern = re.compile(r'^([А-ЯЁ\s]+)$')
     product_pattern = re.compile(r'^([^\n]+)\s-\s(\d+)$')
 
