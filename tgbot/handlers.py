@@ -233,9 +233,33 @@ def update_text_message(message):
                 brand=current_brand,
                 category=current_category
             )
-    bot.send_message(message.chat.id, "Напишите минимальную сумму! Пример: 4000")
-    bot.register_next_step_handler(message, proccess_priceUp_with_price)
+    bot.send_message(message.chat.id, "Выхотите понизить или повысить цену? напишите один из вариантов(повысить/понизить/нет)")
+    bot.register_next_step_handler(message, process_choice)
 
+def process_choice(message):
+    text = message.text.lower()
+    if text == "повысить":
+        bot.send_message(
+            message.chat.id,
+            "Напишите минимальную сумму! Пример: 4000",
+        )
+        bot.register_next_step_handler(message, proccess_priceUp_with_price)
+    elif text == "понизить":
+        bot.send_message(
+            message.chat.id,
+            "Напишите минимальную сумму! Пример: 4000",
+        )
+        bot.register_next_step_handler(message, proccess_priceDown_with_price)
+    elif text == "нет":
+        bot.send_message(
+            message.chat.id,
+            "Вы успешно изменили прайс",
+        )
+    else:
+        bot.send_message(
+            message.chat.id,
+            "Неправильная команда! Заново введите /updateList",
+        )
 
 # Рассылка всем пользователям от лица админа
 @bot.message_handler(commands=["send_message"])
@@ -349,6 +373,7 @@ def proccess_price_up_all(message):
 
 
 # Повышение цен товаров с определенной стоимостью
+@bot.message_handler(commands=["price_up_with_price"])
 def priceUpWithPrice(message):
     bot.send_message(message.chat.id, "Напишите минимальную сумму! Пример: 4000")
     bot.register_next_step_handler(message, proccess_priceUp_with_price)
@@ -399,10 +424,11 @@ def proccess_priceUp_with_price_2_price_up(message, min_price, max_price):
             product.price += int(product.price) * int(procent) // 100
             product.save()
 
-        bot.send_message(message.chat.id, text="Список обновлен!", reply_markup=markup)
+        bot.send_message(message.chat.id, text="Список обновлен! Хотите изменить еще одну категорию цен? выберите один из вариантов(повысить/понизить/нет)", reply_markup=markup)
+        bot.register_next_step_handler(message, process_choice)
     except Exception as e:
         bot.send_message(message.chat.id, f"Ошибка! Неправильный формат процента.")
-
+process_choice
 
 @bot.message_handler(
     func=lambda message: message.text == "Вернуться к предыдущему шагу"
@@ -655,8 +681,9 @@ def proccess_priceDown_with_price_2_price_up(message, min_price, max_price):
         for product in products:
             product.price -= int(int(product.price) * float(procent) // 100)
             product.save()
-
-        bot.send_message(message.chat.id, text="Список обновлен!", reply_markup=markup)
+        
+        bot.send_message(message.chat.id, text="Список обновлен! Хотите изменить еще одну категорию цен? выберите один из вариантов(повысить/понизить/нет)", reply_markup=markup)
+        bot.register_next_step_handler(message, process_choice)
     except Exception as e:
         bot.send_message(message.chat.id, f"Ошибка! Неправильный формат.")
 
@@ -783,7 +810,7 @@ def info(message):
         if admin_id:
             bot.reply_to(
                 message,
-                f"Вы администратор! Вам доступны особенные команды. \n\n/admin_add - Добавление админа\n\n/product_add - Добавление товара \n\n/price_up_with_price - Повышение цены по определенной цене \n\n/price_up - Повышение цены по определенной категории и бренду \n\n/price_up_all - Повышение цены для всех товаров \n\n/price_down - Понижение цены по определенной категории или вендору  \n\n/price_down_with_price - Понижение цены по определенной цене \n\n/send_message - Рассылка сообщения всем юзерам",
+                f"Вы администратор! Вам доступны особенные команды. \n\n/admin_add - Добавление админа\n\n/product_add - Добавление товара \n\n/price_up_with_price - Повышение цены по определенной цене \n\n/price_up - Повышение цены по определенной категории и бренду \n\n/price_up_all - Повышение цены для всех товаров \n\n/price_down - Понижение цены по определенной категории или вендору  \n\n/price_down_with_price - Понижение цены по определенной цене \n\n/send_message - Рассылка сообщения всем юзерам \n\n/updateList - изменения всего прайса одним файлом",
             )
     bot.reply_to(message, f"Лучше закажите у нас!")
 
