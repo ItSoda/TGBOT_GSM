@@ -187,23 +187,35 @@ def updateList(message):
     bot.register_next_step_handler(message, update_text_message)
 
 
+@bot.message_handler(commands=["updateList"])
+def updateList(message):
+    markup = types.ForceReply(selective=False)
+    bot.send_message(
+        message.chat.id,
+        "Отправьте файл",
+        reply_markup=markup,
+    )
+    bot.register_next_step_handler(message, update_text_message)
+
+
 def update_text_message(message):
     line_pattern = re.compile(r'^[-]+$')
     brand_pattern = re.compile(r'^([A-Z\s]+)$')
-    category_pattern = re.compile(r'^([A-ZА-Я\s]+)$')
+    category_pattern = re.compile(r'^([А-ЯЁ\s]+)$')
     product_pattern = re.compile(r'^([^\n]+)\s-\s(\d+)$')
 
     file_id = message.document.file_id
     file_info = bot.get_file(file_id)
     file_path = file_info.file_path
 
-    file_content = bot.download_file(file_path).decode("latin-1")
+    file_content = bot.download_file(file_path).decode("utf-8")
 
 
     brand_name = None
     current_category = None
 
     for line in file_content.splitlines():
+        print(line)
         line_match = line_pattern.match(line)
         brand_match = brand_pattern.match(line)
         category_match = category_pattern.match(line)
@@ -213,7 +225,6 @@ def update_text_message(message):
             if brand_name:
                 current_brand = Brand.objects.get_or_create(name=brand_name)[0]
             brand_name = None
-            current_category = None
 
         elif brand_match:
             brand_name = brand_match.group(1).strip()
@@ -233,6 +244,7 @@ def update_text_message(message):
                 brand=current_brand,
                 category=current_category
             )
+        #     logging.debug(f"Created product: {product_name}, Price: {product_price}, Brand: {current_brand}, Category: {current_category}")
     bot.send_message(message.chat.id, "Выхотите понизить или повысить цену? напишите один из вариантов(повысить/понизить/нет)")
     bot.register_next_step_handler(message, process_choice)
 
