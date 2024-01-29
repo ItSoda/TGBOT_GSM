@@ -215,7 +215,6 @@ def update_text_message(message):
     current_category = None
 
     for line in file_content.splitlines():
-        print(line)
         line_match = line_pattern.match(line)
         brand_match = brand_pattern.match(line)
         category_match = category_pattern.match(line)
@@ -238,12 +237,21 @@ def update_text_message(message):
         elif product_match:
             product_name = product_match.group(1).strip()
             product_price = int(product_match.group(2))
-            Product.objects.create(
-                name=product_name,
-                price=product_price,
-                brand=current_brand,
-                category=current_category
-            )
+            if Product.objects.filter(name=product_name).first():
+                Product.objects.filter(name=product_name).first().delete()
+                Product.objects.create(
+                    name=product_name,
+                    price=product_price,
+                    brand=current_brand,
+                    category=current_category
+                    )
+            else:
+                Product.objects.create(
+                    name=product_name,
+                    price=product_price,
+                    brand=current_brand,
+                    category=current_category
+                )
         #     logging.debug(f"Created product: {product_name}, Price: {product_price}, Brand: {current_brand}, Category: {current_category}")
     bot.send_message(message.chat.id, "Выхотите понизить или повысить цену? напишите один из вариантов(повысить/понизить/нет)")
     bot.register_next_step_handler(message, process_choice)
