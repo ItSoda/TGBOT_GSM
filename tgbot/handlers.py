@@ -200,8 +200,8 @@ def updateList(message):
 
 def update_text_message(message):
     line_pattern = re.compile(r'^[-]+$')
-    brand_pattern = re.compile(r'^([A-Z\s\U0001F300-\U0001F5FF]+)$')
-    category_pattern = re.compile(r'^([А-ЯЁ\s]+)$')
+    brand_pattern = re.compile(r'^([A-Z\s\U0001F300-\U0001F5FF]+)$', re.IGNORECASE)
+    category_pattern = re.compile(r'^([A-ZА-ЯЁ\s]+)$')
     product_pattern = re.compile(r'^([^\n]+)\s-\s(\d+)$')
 
     file_id = message.document.file_id
