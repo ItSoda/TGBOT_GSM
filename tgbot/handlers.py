@@ -222,7 +222,10 @@ def update_text_message(message):
 
         if line_match:
             if brand_name:
-                current_brand = Brand.objects.get_or_create(name=brand_name)[0]
+                if brand_name == "🍎 🍎":
+                    current_brand = Brand.objects.get_or_create(name="APPLE IPHONE")[0]
+                else:
+                    current_brand = Brand.objects.get_or_create(name=brand_name)[0]
             brand_name = None
 
         elif brand_match:
