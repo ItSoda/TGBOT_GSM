@@ -163,7 +163,7 @@ def alllist(message):
         categories = brand.category.all()
         for category in categories:
             text += f"{category.name}\n"
-            products = Product.objects.filter(brand=brand, category=category).order_by("price")
+            products = Product.objects.filter(brand=brand, category=category).order_by("price").order_by("name")
             for product in products:
                 text += f"{product.name} - {product.price} {product.currency}\n"
 
