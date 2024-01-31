@@ -253,7 +253,14 @@ def update_text_message(message):
                     category=current_category
                 )
         #     logging.debug(f"Created product: {product_name}, Price: {product_price}, Brand: {current_brand}, Category: {current_category}")
-    bot.send_message(message.chat.id, "Выхотите понизить или повысить цену? напишите один из вариантов(повысить/понизить/нет)")
+    keyboard = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+    button = types.KeyboardButton(text="повысить")
+    keyboard.add(button)
+    button = types.KeyboardButton(text="понизить")
+    keyboard.add(button)
+    button = types.KeyboardButton(text="нет")
+    keyboard.add(button)
+    bot.send_message(message.chat.id, "Выхотите понизить или повысить цену? напишите один из вариантов(повысить/понизить/нет)", reply_markup=keyboard)
     bot.register_next_step_handler(message, process_choice)
 
 def process_choice(message):
