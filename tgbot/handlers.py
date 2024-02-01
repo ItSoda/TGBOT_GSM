@@ -165,7 +165,7 @@ def alllist(message):
             text += f"{category.name}\n"
             products = Product.objects.filter(brand=brand, category=category).order_by("price").order_by("name")
             for product in products:
-                text += f"{product.name} - {product.price} {product.currency}\n"
+                text += f"{product.name} - {round(int(product.price) / 100) * 100} {product.currency}\n"
 
     max_message_length = 4096
 
@@ -200,7 +200,7 @@ def updateList(message):
 
 def update_text_message(message):
     line_pattern = re.compile(r'^[-]+$')
-    brand_pattern = re.compile(r'^([A-Z\s\U0001F300-\U0001F5FF,]+)$', re.IGNORECASE)
+    brand_pattern = re.compile(r'^([A-Z\s\U0001F300-\U0001F5FF]+|\d+)$', re.IGNORECASE)
     category_pattern = re.compile(r'^([A-ZА-ЯЁ\s]+)$')
     product_pattern = re.compile(r'^([^\n]+)\s-\s(\d+)$')
 
@@ -224,6 +224,8 @@ def update_text_message(message):
             if brand_name:
                 if brand_name == "🍎 🍎":
                     current_brand = Brand.objects.get_or_create(name="APPLE IPHONE")[0]
+                elif brand_name == "🍎":
+                    current_brand = Brand.objects.get_or_create(name="APPLE")[0]
                 else:
                     current_brand = Brand.objects.get_or_create(name=brand_name)[0]
             brand_name = None
@@ -271,15 +273,15 @@ def process_choice(message):
     if text == "повысить":
         bot.send_message(
             message.chat.id,
-            "Напишите минимальную сумму! Пример: 4000",
+            "Напишите какие цены и насколько. Пример: '10000, 30000 - 10%' Эта строка означает что от 10000 до 30000 на 10 %",
         )
-        bot.register_next_step_handler(message, proccess_priceUp_with_price)
+        bot.register_next_step_handler(message, process_price_up_text)
     elif text == "понизить":
         bot.send_message(
             message.chat.id,
             "Напишите минимальную сумму! Пример: 4000",
         )
-        bot.register_next_step_handler(message, proccess_priceDown_with_price)
+        bot.register_next_step_handler(message, process_price_down_text)
     elif text == "нет":
         bot.send_message(
             message.chat.id,
@@ -290,6 +292,76 @@ def process_choice(message):
             message.chat.id,
             "Неправильная команда! Заново введите /updateList",
         )
+
+def process_price_up_text(message):
+    pattern = re.compile(r'(\d+)\s*,?\s*(\d+)\s*-\s*(\d+)\s*%')
+    matches = pattern.findall(message.text)
+
+    price_updates = {}  # Словарь для временного хранения изменений
+
+    for match in matches:
+        start_range = int(match[0])
+        end_range = int(match[1])
+        percentage = int(match[2])
+
+        products = Product.objects.filter(price__gte=start_range, price__lte=end_range)
+
+        for product in products:
+            new_price = int(product.price * (1 + percentage / 100))
+            price_updates[product.id] = new_price
+
+    # Применяем изменения после обработки всех продуктов
+    for product_id, new_price in price_updates.items():
+        Product.objects.filter(id=product_id).update(price=new_price)
+
+    bot.send_message(message.chat.id, text="Список обновлен!")
+
+
+def process_price_down_text(message):
+    pattern = re.compile(r'(\d+)\s*,?\s*(\d+)\s*-\s*(\d+)\s*%')
+    matches = pattern.findall(message.text)
+
+    price_updates = {}  # Словарь для временного хранения изменений
+
+    for match in matches:
+        start_range = int(match[0])
+        end_range = int(match[1])
+        percentage = int(match[2])
+
+        products = Product.objects.filter(price__gte=start_range, price__lte=end_range)
+
+        for product in products:
+            new_price = int(product.price * (1 - percentage / 100))
+            price_updates[product.id] = new_price
+
+    # Применяем изменения после обработки всех продуктов
+    for product_id, new_price in price_updates.items():
+        Product.objects.filter(id=product_id).update(price=new_price)
+
+    bot.send_message(message.chat.id, text="Список обновлен!")
+
+
+
+
+def proccess_priceDown_with_price_2_price_up(message, min_price, max_price):
+    procent = message.text
+    if procent == "Вернуться к прошлому шагу":
+        return proccess_priceDown_with_price_2(message)
+    try:
+        markup = types.ForceReply(selective=False)
+        products = Product.objects.filter(price__gte=min_price, price__lte=max_price)
+        for product in products:
+            product.price -= int(int(product.price) * float(procent) // 100)
+            product.save()
+        
+
+        bot.send_message(message.chat.id, text="Список обновлен! Хотите изменить еще одну категорию цен? выберите один из вариантов(повысить/понизить/нет)", reply_markup=markup)
+        bot.register_next_step_handler(message, process_choice)
+    except Exception as e:
+        bot.send_message(message.chat.id, f"Ошибка! Неправильный формат.")
+
+
+
 
 # Рассылка всем пользователям от лица админа
 @bot.message_handler(commands=["send_message"])
@@ -712,6 +784,7 @@ def proccess_priceDown_with_price_2_price_up(message, min_price, max_price):
             product.price -= int(int(product.price) * float(procent) // 100)
             product.save()
         
+
         bot.send_message(message.chat.id, text="Список обновлен! Хотите изменить еще одну категорию цен? выберите один из вариантов(повысить/понизить/нет)", reply_markup=markup)
         bot.register_next_step_handler(message, process_choice)
     except Exception as e:
