@@ -63,8 +63,9 @@ def product_catalog(message):
 
     for category in categories:
         products = Product.objects.filter(category=category)
-        button = types.KeyboardButton(text=f"{category.name} ({products.count()})")
-        keyboard.add(button)
+        if products.count() != 0:
+            button = types.KeyboardButton(text=f"{category.name} ({products.count()})")
+            keyboard.add(button)
 
     bot.send_message(
         message.chat.id,
@@ -201,7 +202,7 @@ def updateList(message):
 def update_text_message(message):
     line_pattern = re.compile(r'^[-]+$')
     brand_pattern = re.compile(r'^([A-Z\s\U0001F300-\U0001F5FF]+|\d+)$', re.IGNORECASE)
-    category_pattern = re.compile(r'^([A-ZА-ЯЁ\s]+)$')
+    category_pattern = re.compile(r'^([А-ЯЁ\s]+)$')
     product_pattern = re.compile(r'^([^\n]+)\s-\s(\d+)$')
 
     file_id = message.document.file_id
@@ -219,6 +220,14 @@ def update_text_message(message):
         brand_match = brand_pattern.match(line)
         category_match = category_pattern.match(line)
         product_match = product_pattern.match(line)
+        if line.strip() == "УМНАЯ КОЛОНКА":
+            brand_name = "УМНАЯ КОЛОНКА"
+            category_match = None
+            continue
+        if line.strip() == "GO PRO":
+            category_name = "GO PRO"
+            category_match = True
+            continue
 
         if line_match:
             if brand_name:
@@ -246,14 +255,14 @@ def update_text_message(message):
                 Product.objects.filter(name=product_name).first().delete()
                 Product.objects.create(
                     name=product_name,
-                    price=product_price,
+                    price=round(int(product_price) / 100) * 100,
                     brand=current_brand,
                     category=current_category
                     )
             else:
                 Product.objects.create(
                     name=product_name,
-                    price=product_price,
+                    price=round(int(product_price) / 100) * 100,
                     brand=current_brand,
                     category=current_category
                 )
