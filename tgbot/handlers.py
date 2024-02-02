@@ -62,7 +62,7 @@ def product_catalog(message):
     keyboard = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
 
     for category in categories:
-        products = Product.objects.filter(category=category)
+        products = Product.objects.filter(category=category).order_by("price").order_by("name")
         if products.count() != 0:
             button = types.KeyboardButton(text=f"{category.name} ({products.count()})")
             keyboard.add(button)
@@ -118,7 +118,7 @@ def proccess_product_brand(message, category):
 
         products_text = ""
         for product in products:
-            products_text += f"{product.name} - {product.price}{product.currency}\n\n"
+            products_text += f"{product.name} - {round(int(product.price) / 100) * 100}{product.currency}\n\n"
 
         if products_text:
             bot.send_message(message.chat.id, text=products_text, reply_markup=keyboard)
