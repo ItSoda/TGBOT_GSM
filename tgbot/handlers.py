@@ -110,7 +110,7 @@ def proccess_product_brand(message, category):
     try:
         brands = Brand.objects.filter(category=category, name=brand_name)
         brand = brands.first()
-        products = Product.objects.filter(category=category, brand=brand)
+        products = Product.objects.filter(category=category, brand=brand).order_by("price").order_by("name")
 
         keyboard = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
         button = types.KeyboardButton(text="Назад")
