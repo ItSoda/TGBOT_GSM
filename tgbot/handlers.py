@@ -280,8 +280,8 @@ def update_text_message(message):
                     brand=current_brand,
                     category=current_category
                 )
-    current_brand = Brand.objects.get_or_create(name="GO PRO")
-    current_category = Category.objects.get_or_create(name="GO PRO")
+    current_brand = Brand.objects.get_or_create(name="GO PRO")[0]
+    current_category = Category.objects.get_or_create(name="GO PRO")[0]
     Product.objects.create(
         name="Go Pro HERO 10 Black",
         price=27500,
@@ -295,8 +295,8 @@ def update_text_message(message):
         category=current_category
     )
 
-    current_brand = Brand.objects.get_or_create(name="УМНАЯ КОЛОНКА")
-    current_category = Category.objects.get_or_create(name="КОЛОНКИ")
+    current_brand = Brand.objects.get_or_create(name="УМНАЯ КОЛОНКА")[0]
+    current_category = Category.objects.get_or_create(name="КОЛОНКИ")[0]
     Product.objects.create(
         name="колонка Sber Boom Mini-синий нептун",
         price=1900,
