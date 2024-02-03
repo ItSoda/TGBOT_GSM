@@ -299,60 +299,60 @@ def update_text_message(message):
     current_brand = Brand.objects.get_or_create(name="УМНАЯ КОЛОНКА")[0]
     current_category = Category.objects.get_or_create(name="КОЛОНКИ")[0]
     current_brand.category.add(current_category)
-    Product.objects.get_or_create(
-        name="колонка Sber Boom Mini-синий нептун",
-        price=1900,
-        brand=current_brand,
-        category=current_category
-    )
-    Product.objects.get_or_create(
-        name="колонка Яндекс станция2 -красная",
-        price=11700,
-        brand=current_brand,
-        category=current_category
-    )
-    Product.objects.get_or_create(
-        name="колонка Яндекс станция2 -песочный",
-        price=11700,
-        brand=current_brand,
-        category=current_category
-    )
-    Product.objects.get_or_create(
-        name="колонка Яндекс станция2-синяя",
-        price=11700,
-        brand=current_brand,
-        category=current_category
-    )
-    Product.objects.get_or_create(
-        name="колонка Яндекс станция2-чёрная",
-        price=11700,
-        brand=current_brand,
-        category=current_category
-    )
-    Product.objects.get_or_create(
-        name="колонка Яндекс станция Макс Zigbee-бирюзовый(Бирюзовый)",
-        price=24700,
-        brand=current_brand,
-        category=current_category
-    )
-    Product.objects.get_or_create(
-        name="колонка Яндекс станция Макс Zigbee-зелёная",
-        price=24700,
-        brand=current_brand,
-        category=current_category
-    )
-    Product.objects.get_or_create(
-        name="колонка Яндекс станция Макс Дуо Zigbee-черная",
-        price=32500,
-        brand=current_brand,
-        category=current_category
-    )
-    Product.objects.get_or_create(
-        name="колонка Яндекс станция Миди Zigbee-изумрудный (с часами)",
-        price=11800,
-        brand=current_brand,
-        category=current_category
-    )
+    # Product.objects.get_or_create(
+    #     name="колонка Sber Boom Mini-синий нептун",
+    #     price=1900,
+    #     brand=current_brand,
+    #     category=current_category
+    # )
+    # Product.objects.get_or_create(
+    #     name="колонка Яндекс станция2 -красная",
+    #     price=11700,
+    #     brand=current_brand,
+    #     category=current_category
+    # )
+    # Product.objects.get_or_create(
+    #     name="колонка Яндекс станция2 -песочный",
+    #     price=11700,
+    #     brand=current_brand,
+    #     category=current_category
+    # )
+    # Product.objects.get_or_create(
+    #     name="колонка Яндекс станция2-синяя",
+    #     price=11700,
+    #     brand=current_brand,
+    #     category=current_category
+    # )
+    # Product.objects.get_or_create(
+    #     name="колонка Яндекс станция2-чёрная",
+    #     price=11700,
+    #     brand=current_brand,
+    #     category=current_category
+    # )
+    # Product.objects.get_or_create(
+    #     name="колонка Яндекс станция Макс Zigbee-бирюзовый(Бирюзовый)",
+    #     price=24700,
+    #     brand=current_brand,
+    #     category=current_category
+    # )
+    # Product.objects.get_or_create(
+    #     name="колонка Яндекс станция Макс Zigbee-зелёная",
+    #     price=24700,
+    #     brand=current_brand,
+    #     category=current_category
+    # )
+    # Product.objects.get_or_create(
+    #     name="колонка Яндекс станция Макс Дуо Zigbee-черная",
+    #     price=32500,
+    #     brand=current_brand,
+    #     category=current_category
+    # )
+    # Product.objects.get_or_create(
+    #     name="колонка Яндекс станция Миди Zigbee-изумрудный (с часами)",
+    #     price=11800,
+    #     brand=current_brand,
+    #     category=current_category
+    # )
         #     logging.debug(f"Created product: {product_name}, Price: {product_price}, Brand: {current_brand}, Category: {current_category}")
     keyboard = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     button = types.KeyboardButton(text="повысить")
