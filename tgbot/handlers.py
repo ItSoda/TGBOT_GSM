@@ -121,7 +121,13 @@ def proccess_product_brand(message, category):
             products_text += f"{product.name} - {round(int(product.price) / 100) * 100}{product.currency}\n\n"
 
         if products_text:
-            bot.send_message(message.chat.id, text=products_text, reply_markup=keyboard)
+            max_message_length = 4096
+
+        text_chunks = [products_text[i:i + max_message_length] for i in range(0, len(products_text), max_message_length)]
+    
+        for chunk in text_chunks:
+            bot.send_message(message.chat.id, text=chunk, reply_markup=keyboard)
+
     except Brand.DoesNotExist:
         bot.send_message(message.chat.id, "Такого вендора нет!")
     except Product.DoesNotExist:
