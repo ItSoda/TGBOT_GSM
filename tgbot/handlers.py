@@ -235,6 +235,11 @@ def update_text_message(message):
             category_match = True
             continue
 
+        if line.strip() == "HONOR, HUAWEI":
+            brand_name = "HONOR, HUAWEI"
+            category_match = None
+            continue
+
         if line_match:
             if brand_name:
                 if brand_name == "🍎 🍎":
