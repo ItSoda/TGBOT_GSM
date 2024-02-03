@@ -120,8 +120,7 @@ def proccess_product_brand(message, category):
         for product in products:
             products_text += f"{product.name} - {round(int(product.price) / 100) * 100}{product.currency}\n\n"
 
-        if products_text:
-            max_message_length = 4096
+        max_message_length = 4096
 
         text_chunks = [products_text[i:i + max_message_length] for i in range(0, len(products_text), max_message_length)]
     
