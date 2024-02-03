@@ -228,7 +228,7 @@ def update_text_message(message):
         product_match = product_pattern.match(line)
         if line.strip() == "УМНАЯ КОЛОНКА":
             brand_name = "УМНАЯ КОЛОНКА"
-            category_name = "КОЛОНКИ"
+            line_match = True
             continue
         if line.strip() == "GO PRO":
             category_name = "GO PRO"
