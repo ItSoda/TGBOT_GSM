@@ -232,6 +232,7 @@ def update_text_message(message):
             continue
         if line.strip() == "GO PRO":
             category_name = "GO PRO"
+            brand_name = "GO PRO"
             category_match = True
             continue
 
