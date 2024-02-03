@@ -186,6 +186,9 @@ def alllist(message):
 @bot.message_handler(commands=["updateList"])
 def updateList(message):
     markup = types.ForceReply(selective=False)
+    Product.objects.all().delete()
+    Category.objects.all().delete()
+    Brand.objects.all().delete()
     bot.send_message(
         message.chat.id,
         "Отправьте файл",
@@ -278,6 +281,77 @@ def update_text_message(message):
                     brand=current_brand,
                     category=current_category
                 )
+    current_brand = Brand.obejcts.get_or_create(name="GO PRO")
+    current_category = Category.obejcts.get_or_create(name="GO PRO")
+    Product.objects.create(
+        name="Go Pro HERO 10 Black",
+        price=27500,
+        brand=current_brand,
+        category=current_category
+    )
+    Product.objects.create(
+        name="Go Pro HERO 11 Black",
+        price=31000,
+        brand=current_brand,
+        category=current_category
+    )
+
+    current_brand = Brand.obejcts.get_or_create(name="УМНАЯ КОЛОНКА")
+    current_category = Category.obejcts.get_or_create(name="КОЛОНКИ")
+    Product.objects.create(
+        name="колонка Sber Boom Mini-синий нептун",
+        price=1900,
+        brand=current_brand,
+        category=current_category
+    )
+    Product.objects.create(
+        name="колонка Яндекс станция2 -красная",
+        price=11700,
+        brand=current_brand,
+        category=current_category
+    )
+    Product.objects.create(
+        name="колонка Яндекс станция2 -песочный",
+        price=11700,
+        brand=current_brand,
+        category=current_category
+    )
+    Product.objects.create(
+        name="колонка Яндекс станция2-синяя",
+        price=11700,
+        brand=current_brand,
+        category=current_category
+    )
+    Product.objects.create(
+        name="колонка Яндекс станция2-чёрная",
+        price=11700,
+        brand=current_brand,
+        category=current_category
+    )
+    Product.objects.create(
+        name="колонка Яндекс станция Макс Zigbee-бирюзовый(Бирюзовый)",
+        price=24700,
+        brand=current_brand,
+        category=current_category
+    )
+    Product.objects.create(
+        name="колонка Яндекс станция Макс Zigbee-зелёная",
+        price=24700,
+        brand=current_brand,
+        category=current_category
+    )
+    Product.objects.create(
+        name="колонка Яндекс станция Макс Дуо Zigbee-черная",
+        price=32500,
+        brand=current_brand,
+        category=current_category
+    )
+    Product.objects.create(
+        name="колонка Яндекс станция Миди Zigbee-изумрудный (с часами)",
+        price=11800,
+        brand=current_brand,
+        category=current_category
+    )
         #     logging.debug(f"Created product: {product_name}, Price: {product_price}, Brand: {current_brand}, Category: {current_category}")
     keyboard = types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
     button = types.KeyboardButton(text="повысить")
